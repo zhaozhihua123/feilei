@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工程建筑材料智能分类系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-hard-hat"></i>
+                <h1>工程建筑材料智能分类系统</h1>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-primary" id="addToolBtn">
+                    <i class="fas fa-plus"></i> 添加工具
+                </button>
+                <button class="btn btn-icon" id="themeToggle">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+            </div>
+        </div>
+        <nav class="page-tabs" id="pageTabs">
+            <button class="page-tab active" data-page="selector">
+                <i class="fas fa-wrench"></i> 工具选择器
+            </button>
+            <button class="page-tab" data-page="ai">
+                <i class="fas fa-brain"></i> AI识别
+            </button>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <div id="toolSelectorPage" class="page-content">
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h2>分类导航</h2>
+                    <span class="tool-count">共 <span id="countAll">0</span> 个工具</span>
+                </div>
+                <ul class="category-list" id="categoryList"></ul>
+            </aside>
+
+            <div class="main-area">
+                <div class="panel-left">
+                    <div class="panel-header">
+                        <h2>可用工具</h2>
+                        <div class="search-container">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="searchInput" placeholder="搜索工具名称、描述...">
+                        </div>
+                    </div>
+                    <div class="tool-grid" id="availableTools"></div>
+                </div>
+
+                <div class="panel-right">
+                    <div class="panel-header">
+                        <h2>已选工具</h2>
+                        <div class="panel-actions">
+                            <span class="selected-count">已选择 <span id="selectedCount">0</span> 个</span>
+                            <button class="btn btn-sm btn-danger" id="clearSelectedBtn">
+                                <i class="fas fa-trash"></i> 清空
+                            </button>
+                        </div>
+                    </div>
+                    <div class="tool-grid" id="selectedTools"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="aiPage" class="page-content" style="display: none;">
+            <div class="ai-container">
+                <div class="ai-left">
+                    <div class="ai-card">
+                        <h3><i class="fas fa-image"></i> 上传图片</h3>
+                        <div class="upload-area">
+                            <input type="file" id="imageUpload" accept="image/*" hidden>
+                            <label for="imageUpload" class="upload-label">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>点击或拖拽上传图片</span>
+                            </label>
+                            <img id="imagePreview" src="" alt="预览" style="display: none;">
+                        </div>
+                    </div>
+
+                    <div class="ai-card">
+                        <h3><i class="fas fa-key"></i> OpenAI API Key</h3>
+                        <div class="api-key-container">
+                            <input type="password" id="apiKey" placeholder="请输入您的OpenAI API Key">
+                            <button class="btn btn-sm btn-secondary" id="clearApiKeyBtn">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <p class="api-hint">API Key将保存在本地浏览器中，不会上传到服务器</p>
+                    </div>
+
+                    <button class="btn btn-primary btn-lg" id="recognizeBtn" disabled>
+                        <i class="fas fa-search"></i> 开始识别
+                    </button>
+                </div>
+
+                <div class="ai-right">
+                    <div class="ai-card result-card">
+                        <h3><i class="fas fa-robot"></i> 识别结果</h3>
+                        <div id="aiResult" class="ai-result">
+                            <div class="empty-state">
+                                <i class="fas fa-image"></i>
+                                <h3>等待上传图片</h3>
+                                <p>上传工具图片后，AI将自动识别并提供详细信息</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="toolModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle">添加工具</h2>
+                <button class="btn btn-icon modal-close" id="modalClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="toolForm">
+                    <input type="hidden" id="toolId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>工具名称 *</label>
+                            <input type="text" id="toolName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>分类 *</label>
+                            <select id="toolCategory" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label>子分类</label>
+                            <select id="toolSubCategory"></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>存放位置</label>
+                        <input type="text" id="toolLocation" placeholder="例如：工具箱A层">
+                    </div>
+                    <div class="form-group">
+                        <label>工具描述 *</label>
+                        <textarea id="toolDescription" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>用途说明</label>
+                        <textarea id="toolUsage" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>标签</label>
+                        <input type="text" id="toolTags" placeholder="多个标签用逗号分隔">
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <textarea id="toolNotes" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modalCancel">取消</button>
+                <button class="btn btn-primary" id="modalSave">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal detail-modal">
+            <div class="modal-header">
+                <h2>工具详情</h2>
+                <button class="btn btn-icon modal-close" id="detailClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="detailBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="detailDelete">删除</button>
+                <button class="btn btn-primary" id="detailEdit">编辑</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer"></div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
